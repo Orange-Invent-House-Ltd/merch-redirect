@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction Status</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        /* Custom styles can be added here */
+        #transaction-status {
+            padding: 50px; /* Added top padding */
+            width: 50vw; /* Set width to 50% of viewport width */
+            max-width: 500px; /* Limit maximum width */
+            background-color: white; /* Added white background */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* Added shadow */
+        }
+
+        #loader {
+            display: none; /* Initially hidden */
+            width: 150px; /* Set width to 150px */
+            height: 150px; /* Set height to 150px */
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100">
+    <div id="root" class="flex items-center justify-center h-screen">
+        <div id="transaction-status" class="flex flex-col items-center gap-8 rounded-xl">
+            <div id="payment-success" class="hidden">
+                <div class="Content self-stretch p-0 flex flex-col justify-start items-center gap-4">
+                    <img class="w-16 h-16" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712942676/MERCHANTS/paymentSuccessful_xdqdqi.svg" alt="Payment Successful" />
+                    <div class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
+                        <div class="Text self-stretch text-center text-neutral-900 text-2xl font-medium">
+                            Payment Successful!
+                        </div>
+                        <div class="SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal">
+                            Your payment was successful! Click the button below to return to your dashboard.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="payment-failed" class="hidden">
+                <div class="Content self-stretch p-0 flex flex-col justify-start items-center gap-4">
+                    <img class="w-16 h-16" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712942675/MERCHANTS/paymentFailed_ltqgbn.svg" alt="Payment Failed" />
+                    <div class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
+                        <div class="Text self-stretch text-center text-red-600 text-2xl font-medium">
+                            Payment Failed!
+                        </div>
+                        <button class="SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal">
+                            Unfortunately, your payment was not successful! Click the button below to return to your dashboard.
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <img id="loader" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712944151/MERCHANTS/Spinner_2x-1.0s-200px-200px_nifyqh.gif" alt="Loading..." /> <!-- Loader GIF -->
+            <button onclick="navigate('/buyer/dashboard')" class="Frame34643 mt-8 p-0 flex flex-col justify-start items-start gap-12">
+                <div class="w-[352px] p-0 justify-start items-start gap-12 inline-flex">
+                    <div class="Button grow shrink basis-0 h-12 p-0 rounded-lg justify-center items-center flex">
+                        <div class="ButtonBase grow shrink basis-0 h-12 px-6 py-2 bg-red-600 rounded-lg shadow border border-red-600 justify-center items-center gap-2">
+                            <div class="Text text-white text-lg font-medium">
+                                Return to dashboard
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </button>
+        </div>
+    </div>
+    <script>
+        function navigate(url) {
+            console.log('Navigating to: ', url);
+        }
+
+        // Show loader
+        document.getElementById('loader').style.display = 'block';
+
+        // Fetch banks data
+        fetch('https://staging-api.mybalanceapp.com/v1/shared/banks')
+            .then(response => {
+                document.getElementById('loader').style.display = 'none'; // Hide loader
+                if (response.ok) {
+                    document.getElementById('payment-success').classList.remove('hidden');
+                } else {
+                    document.getElementById('payment-failed').classList.remove('hidden');
+                }
+                return response.json();
+            })
+            .then(data => console.log('Banks data:', data))
+            .catch(error => console.error('Error fetching banks data:', error));
+    </script>
+</body>
+
+</html>
