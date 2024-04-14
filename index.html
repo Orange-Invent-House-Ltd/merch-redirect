@@ -30,31 +30,34 @@
             <div id="payment-success" class="hidden">
                 <div class="Content self-stretch p-0 flex flex-col justify-start items-center gap-4">
                     <img class="w-16 h-16" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712942676/MERCHANTS/paymentSuccessful_xdqdqi.svg" alt="Payment Successful" />
-                    <div class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
-                        <div class="Text self-stretch text-center text-neutral-900 text-2xl font-medium">
+                    <div id="payment-success-content" class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
+                        <!-- <div class="Text self-stretch text-center text-neutral-900 text-2xl font-medium">
                             Payment Successful!
                         </div>
                         <div class="SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal">
                             Your payment was successful! Click the button below to return to your dashboard.
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
             <div id="payment-failed" class="hidden">
                 <div class="Content self-stretch p-0 flex flex-col justify-start items-center gap-4">
                     <img class="w-16 h-16" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712942675/MERCHANTS/paymentFailed_ltqgbn.svg" alt="Payment Failed" />
-                    <div class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
-                        <div class="Text self-stretch text-center text-red-600 text-2xl font-medium">
+                    <div id="payment-failed-content" class="TextAndSupportingText self-stretch p-0 flex flex-col justify-start items-center gap-2">
+                        <!-- <div class="Text self-stretch text-center text-red-600 text-2xl font-medium">
                             Payment Failed!
                         </div>
                         <button class="SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal">
-                            Unfortunately, your payment was not successful! Click the button below to return to your dashboard.
+                            Unfortunately, your payment was not successful!
                         </button>
+                        <button class="SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal">
+                            Click the button below to return to your dashboard.
+                        </button> -->
                     </div>
                 </div>
             </div>
             <img id="loader" src="https://res.cloudinary.com/db4mrl0xv/image/upload/v1712944151/MERCHANTS/Spinner_2x-1.0s-200px-200px_nifyqh.gif" alt="Loading..." /> <!-- Loader GIF -->
-            <button onclick="navigate('/buyer/dashboard')" class="Frame34643 mt-8 p-0 flex flex-col justify-start items-start gap-12">
+            <!-- <button onclick="navigate('/buyer/dashboard')" class="Frame34643 mt-8 p-0 flex flex-col justify-start items-start gap-12">
                 <div class="w-[352px] p-0 justify-start items-start gap-12 inline-flex">
                     <div class="Button grow shrink basis-0 h-12 p-0 rounded-lg justify-center items-center flex">
                         <div class="ButtonBase grow shrink basis-0 h-12 px-6 py-2 bg-red-600 rounded-lg shadow border border-red-600 justify-center items-center gap-2">
@@ -64,30 +67,103 @@
                         </div>
                     </div>
                 </div>
-            </button>
+            </button> -->
         </div>
     </div>
     <script>
         function navigate(url) {
-            console.log('Navigating to: ', url);
+            window.location.href = url;
         }
-
         // Show loader
         document.getElementById('loader').style.display = 'block';
 
-        // Fetch banks data
-        fetch('https://staging-api.mybalanceapp.com/v1/shared/banks')
-            .then(response => {
-                document.getElementById('loader').style.display = 'none'; // Hide loader
-                if (response.ok) {
+        const BASE_URL = "https://staging-api.mybalanceapp.com"; 
+
+        // Retrieve query parameters from URL
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const status = urlParams.get('status');
+        const tx_ref = urlParams.get('tx_ref');
+        const transaction_id = urlParams.get('transaction_id');
+        const endpoint = `${BASE_URL}/v1/merchants/escrow-redirect${queryString}`
+        
+        fetch(endpoint)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Transaction verified
+                    document.getElementById('loader').style.display = 'none'; // Hide loader
                     document.getElementById('payment-success').classList.remove('hidden');
-                } else {
+
+                    // Display message
+                    const paymentSuccessContent = document.getElementById('payment-success-content');
+                    paymentSuccessContent.innerHTML = '';
+
+                    // Create and append success title
+                    const successMessageTitle = document.createElement('div');
+                    successMessageTitle.className = 'Text self-stretch text-center text-neutral-900 text-2xl font-medium';
+                    successMessageTitle.innerText = 'Payment successful!';
+                    paymentSuccessContent.appendChild(successMessageTitle);
+
+                    // Create and append success message
+                    const successMessageButton = document.createElement('button');
+                    successMessageButton.className = 'SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal';
+                    successMessageButton.innerText = `${data.message || ' Your payment was successful!'}` + ' Click the button below to return to your dashboard.';
+                    paymentSuccessContent.appendChild(successMessageButton);
+                } 
+                else {
+                    // Error while verifying transaction
+                    document.getElementById('loader').style.display = 'none'; // Hide loader
                     document.getElementById('payment-failed').classList.remove('hidden');
+                    
+                    // Display message
+                    const paymentFailedContent = document.getElementById('payment-failed-content');
+                    paymentFailedContent.innerHTML = ''; // Clear existing content
+
+                    // Create and append error title
+                    const errorMessageTitle = document.createElement('div');
+                    errorMessageTitle.className = 'Text self-stretch text-center text-red-600 text-2xl font-medium';
+                    errorMessageTitle.innerText = 'Payment validation failed!';
+                    paymentFailedContent.appendChild(errorMessageTitle);
+
+                    // Create and append error message
+                    const errorMessageButton = document.createElement('button');
+                    errorMessageButton.className = 'SupportingText self-stretch text-center text-zinc-800 text-lg font-normal leading-normal';
+                    errorMessageButton.innerText = `${data.message || 'Unfortunately, your payment was not successful!'}.` + ' Click the button below to return to your dashboard.';
+                    paymentFailedContent.appendChild(errorMessageButton);
                 }
-                return response.json();
-            })
-            .then(data => console.log('Banks data:', data))
-            .catch(error => console.error('Error fetching banks data:', error));
+
+                
+                // Create return to dashboard button
+                const transactionStatusContent = document.getElementById('transaction-status');;
+                const returnToDashboardButton = document.createElement('button');
+                    returnToDashboardButton.className = 'Frame34643 mt-8 p-0 flex flex-col justify-start items-start gap-12';
+                    returnToDashboardButton.onclick = function() {
+                        if (data.data){
+                            navigate(data.data.redirectUrl)
+                        }
+                        else {
+                        navigate('https://mybalanceapp.com/login');
+                        };
+                    }
+                    // Create button content
+                    const buttonContent = `
+                        <div class="w-[352px] p-0 justify-start items-start gap-12 inline-flex">
+                            <div class="Button grow shrink basis-0 h-12 p-0 rounded-lg justify-center items-center flex">
+                                <div class="ButtonBase grow shrink basis-0 h-12 px-6 py-2 bg-red-600 rounded-lg shadow border border-red-600 justify-center items-center gap-2">
+                                    <div class="Text text-white text-lg font-medium">
+                                        Return to Dashboard
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    // Set button content
+                    returnToDashboardButton.innerHTML = buttonContent;
+                    // Append button to the parent element
+                    transactionStatusContent.appendChild(returnToDashboardButton);
+                })
+            .catch(error => console.error('Error fetching data:', error));
     </script>
 </body>
 
